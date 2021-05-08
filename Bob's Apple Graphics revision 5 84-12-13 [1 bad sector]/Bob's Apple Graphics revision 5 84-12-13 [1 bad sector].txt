@@ -1,0 +1,2900 @@
+-------------------------------------------- SCREEN 001
+( HIGH-LEVEL WORDS       <10/12/84>141) 
+--> EXIT                                
+HCOLOR ( N -- )                         
+   SET CURRENT COLOR                    
+SETMODE ( N -- )                        
+   SET GRAPHICS MODE; SEE SCR 140       
+SETENDPTS ( X1 X2 -- )                  
+   SET CURRENT X END POINTS             
+HLINE ( Y -- )                          
+   DRAW HORIZ LINE WITHIN CURRENT       
+   X END POINTS                         
+VLINE ( Y1 Y2 -- )                      
+   DRAW VERTICAL LINE (OR BAR)          
+   WITHIN CURRENT X END POINTS          
+HPLOT ( X Y -- )                        
+   PLOT POINT AT [X,Y]                  
+   (DOES "SETENDPTS")                   
+LINE ( X1 Y1 X2 Y2 -- )                 
+   DRAW LINE FROM [X1,Y1] TO [X2,Y2]    
+CDRAW ( ADDR X Y -- )                   
+   DRAW CHARACTER AT [X,Y]              
+<GEMIT> ( CH -- )                       
+   DRAW CHARACTER AT [GX,GY]            
+                               (  RLP ) 
+-------------------------------------------- SCREEN 003
+( LOAD BLOCK CONT'D      < 1/29/85>143) 
+                                        
+CR 150     LOAD     ( zero-page usage ) 
+   151 155 THRU        ( yaddr, 7/mod ) 
+CR 156 161 THRU            ( colortab ) 
+CR 162 165 THRU              ( hcolor ) 
+CR 167 178 THRU               ( hline ) 
+CR 185 186 THRU               ( vline ) 
+CR 180 182 THRU               ( hplot ) 
+CR 190 193 THRU           ( char draw ) 
+   195 196 THRU                         
+CR 250 256 THRU      ( char draw cntd ) 
+(  200 208 THRU        ( line drawing ) 
+       209 LOAD              ( random ) 
+(  210 219 THRU           ( area fill ) 
+   220 229 THRU ( gemit, gexpect, etc.) 
+   230 234 THRU  ( xemit, xkey, gtype ) 
+                                        
+CR CR ." Graphics Package loaded"       
+CR 2BEEP EXIT                           
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 007
+( .S INDEX               <10/24/84>147) 
+                                        
+: INDEX CR 1+ SWAP                      
+        DO  CR EPRINT @                 
+            IF    I 3 .R SPACE          
+                  0 I .LINE             
+            ELSE  0 I .LINE             
+                  XY@ SWAP DROP         
+                  35 SWAP XYTAB         
+                  I 3 .R                
+            THEN                        
+            PAUSE ?TERMINAL             
+            IF LEAVE THEN               
+        LOOP ;                          
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 008
+(                        <12/ 7/84>148) 
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 009
+( .PAI                   < 9/30/84>149) 
+                                        
+: .PAI   ."  PAI " ;                    
+: .RLP   ."  RLP " ;                    
+: .SALLY ." SALLY" ;                    
+: .FRED  ." FRED " ;                    
+: .ELLA  ." ELLA " ;                    
+: .LARRY ." LARRY" ;                    
+                                        
+: =PAI   ' .PAI   ' .HR:MIN 10 CMOVE ;  
+: =RLP   ' .RLP   ' .HR:MIN 10 CMOVE ;  
+: =SALLY ' .SALLY ' .HR:MIN 10 CMOVE ;  
+: =FRED  ' .FRED  ' .HR:MIN 10 CMOVE ;  
+: =ELLA  ' .ELLA  ' .HR:MIN 10 CMOVE ;  
+: =LARRY ' .LARRY ' .HR:MIN 10 CMOVE ;  
+                                        
+=RLP                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 010
+( ZERO PAGE USAGE        <11/13/84>150) 
+HEX                                     
+  E0 CONSTANT GBASE      ( >Y address ) 
+  E2 CONSTANT GPATTERN   ( >pattern   ) 
+  E4 CONSTANT GFIG       ( >fig data  ) 
+\ E6 CONSTANT GMODE      ( fill mode  ) 
+  E8 CONSTANT &QUO       ( x offset   ) 
+  EA CONSTANT &REM       ( bit num.   ) 
+                                        
+  VARIABLE GMODE                        
+                                        
+DECIMAL                                 
+EXIT                                    
+--------------------------------------- 
+Locations D0 through EF are not used    
+by MVP-PADS, to allow use of the        
+Applesoft ram floating-point and        
+graphics routines.                      
+These particular loactions are part of  
+the FP scratch area.                    
+Note that D0 is just above              
+the bottom of the Forth data stack.     
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 011
+( $YADDR SUBROUTINE      <11/13/84>151) 
+\ entry: line# in X reg.                
+\ exit:  address in GBASE               
+\ all registers are preserved           
+                                        
+HEX                                     
+CODE $YADDR                             
+   PHA, TXA, # C0  AND, GBASE STA,      
+             .A LSR, .A LSR,            
+             GBASE ORA, GBASE STA,      
+        TXA, GBASE 1+ STA, .A ASL,      
+             .A ASL, .A ASL,            
+             GBASE 1+ ROL, .A ASL,      
+             GBASE 1+ ROL, .A ASL,      
+             GBASE ROR,                 
+             GBASE 1+ LDA, # 1F AND,    
+             # 20 ORA, GBASE 1+ STA,    
+   PLA, RTS, C;                         
+DECIMAL                                 
+EXIT                                    
+--------------------------------------- 
+Note: only valid for 0 <= line# <= 191  
+BOMBS FORTH when -1 or 255              
+                               (  RLP ) 
+-------------------------------------------- SCREEN 012
+( YADDR code version     <11/13/84>152) 
+                                        
+CODE YADDR ( y -- yaddr )               
+     XSAVE STX, BOT LDA, TAX,           
+     ' $YADDR JSR,                      
+     XSAVE LDX,                         
+     GBASE    LDA, BOT    STA,          
+     GBASE 1+ LDA, BOT 1+ STA,          
+     NEXT JMP, C;                       
+                                        
+EXIT                                    
+--------------------------------------- 
+Algorithm in Basic:                     
+                                        
+ INPUT Y                                
+ Y1 = INT(Y /8) : YR = Y  - Y1*8        
+ Y2 = INT(Y1/8) : YS = Y1 - Y2*8        
+ L  = 8192 + 40*Y2 + 128*YS + 1024*YR   
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 013
+( BIT MASK TABLES        <11/13/84>153) 
+HEX                                     
+                                        
+CREATE BITTBL                           
+        1 C,  2 C,  4 C,  8 C,          
+       10 C, 20 C, 40 C, 80 C,          
+                                        
+CREATE LMASKS                           
+       7F C, 7E C, 7C C, 78 C,          
+       70 C, 60 C, 40 C, 00 C,          
+                                        
+CREATE RMASKS                           
+       01 C, 03 C, 07 C, 0F C,          
+       1F C, 3F C, 7F C, FF C,          
+                                        
+DECIMAL                                 
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 014
+( $B/MOD unsigned divide <12/12/84>154) 
+\ 16bit/8bit --> 8bit,8bit              
+\ entry:                                
+\   "A" = lsb, "Y" = msb, "X" = divisor 
+\ exit:                                 
+\   quotient in &QUO, remainder in &REM 
+                                        
+CODE $B/MOD                             
+            N STX, ( divisor )          
+            &QUO STA, ( dividend lsb )  
+            PHA, TYA, PHA, ( " msb )    
+            # 8 LDY,                    
+ BEGIN,     &QUO ASL,                   
+            .A ROL,                     
+            N CMP,                      
+  CS IF,    N SBC,                      
+            &QUO INC,                   
+  THEN,     DEY,                        
+ 0= UNTIL,  &REM STA,                   
+            PLA, TAY, PLA, RTS,         
+END-CODE                                
+                                        
+                                        
+                                        
+-------------------------------------------- SCREEN 015
+( $7/MOD 7/MOD B/MOD     <12/12/84>155) 
+                                        
+CODE $7/MOD                             
+         N STA, TXA, PHA,               
+         N LDA, # 7 LDX,                
+         ' $B/MOD JSR,                  
+         PLA, TAX, RTS, C;              
+                                        
+CODE B/MOD ( 16bit 8bit -- 8bit 8bit )  
+         XSAVE STX,                     
+         SEC LDA, SEC 1+ LDY,           
+         PHA, BOT LDA, TAX, PLA,        
+         ' $B/MOD JSR,                  
+         XSAVE LDX,                     
+         # 0 LDY,                       
+         &QUO LDA, BOT STA, BOT 1+ STY, 
+         &REM LDA, SEC STA, SEC 1+ STY, 
+         NEXT JMP, C;                   
+                                        
+: 7/MOD 7 B/MOD ;                       
+: 7/   7/MOD SWAP DROP ;                
+: 7MOD 7/MOD DROP ;                     
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 016
+( COLORTAB notes         <11/13/84>156) 
+                                        
+EXIT                                    
+--------------------------------------- 
+Each entry in COLORTAB is a nine-byte   
+block.                                  
+The first eight bytes form an 8-by-8    
+bit array that is expanded into         
+eight full scan lines.                  
+The ninth byte indicates whether the    
+color bit is turned on for each scan    
+line.                                   
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  rlp ) 
+-------------------------------------------- SCREEN 017
+( COLORTAB               <11/13/84>157) 
+HEX                                     
+                                        
+CREATE COLORTAB                         
+                                        
+(  0 = black1 )                         
+      00 C, 00 C, 00 C, 00 C,           
+      00 C, 00 C, 00 C, 00 C, 00 C,     
+                                        
+(  1 = violet )                         
+      55 C, 55 C, 55 C, 55 C,           
+      55 C, 55 C, 55 C, 55 C, 00 C,     
+                                        
+(  2 = green  )                         
+      AA C, AA C, AA C, AA C,           
+      AA C, AA C, AA C, AA C, 00 C,     
+                                        
+(  3 = white1 )                         
+      FF C, FF C, FF C, FF C,           
+      FF C, FF C, FF C, FF C, 00 C,     
+DECIMAL                                 
+                                        
+EXIT                                    
+                               (  RLP ) 
+-------------------------------------------- SCREEN 018
+( COLORTAB CONTINUED     <11/13/84>158) 
+HEX                                     
+                                        
+                                        
+                                        
+(  4 = black2 )                         
+      00 C, 00 C, 00 C, 00 C,           
+      00 C, 00 C, 00 C, 00 C, FF C,     
+                                        
+(  5 = blue   )                         
+      55 C, 55 C, 55 C, 55 C,           
+      55 C, 55 C, 55 C, 55 C, FF C,     
+                                        
+(  6 = orange )                         
+      AA C, AA C, AA C, AA C,           
+      AA C, AA C, AA C, AA C, FF C,     
+                                        
+(  7 = white2 )                         
+      FF C, FF C, FF C, FF C,           
+      FF C, FF C, FF C, FF C, FF C,     
+DECIMAL                                 
+                                        
+EXIT                                    
+                               (  RLP ) 
+-------------------------------------------- SCREEN 019
+( COLORTAB CONTINUED     <11/12/84>159) 
+HEX                                     
+( violet )                              
+( &black) 44 C, 11 C, 44 C, 11 C,       
+          44 C, 11 C, 44 C, 11 C, 00 C, 
+( &white) 77 C, DD C, 77 C, DD C,       
+          77 C, DD C, 77 C, DD C, 00 C, 
+( green )                               
+( &black) 22 C, 88 C, 22 C, 88 C,       
+          22 C, 88 C, 22 C, 88 C, 00 C, 
+( &white) EE C, BB C, EE C, BB C,       
+          EE C, BB C, EE C, BB C, 00 C, 
+( blue )                                
+( &black) 44 C, 11 C, 44 C, 11 C,       
+          44 C, 11 C, 44 C, 11 C, FF C, 
+( &white) 77 C, DD C, 77 C, DD C,       
+          77 C, DD C, 77 C, DD C, FF C, 
+( orange )                              
+( &black) 22 C, 88 C, 22 C, 88 C,       
+          22 C, 88 C, 22 C, 88 C, FF C, 
+( &white) EE C, BB C, EE C, BB C,       
+          EE C, BB C, EE C, BB C, FF C, 
+DECIMAL                                 
+EXIT                           (  RLP ) 
+-------------------------------------------- SCREEN 020
+( COLORTAB CONTINUED     <11/13/84>160) 
+                                        
+EXIT                                    
+--------------------------------------- 
+                                        
+( FOUR COLORS OF GRAY )                 
+HEX                                     
+      CC C, 33 C, CC C, 33 C,           
+      CC C, 33 C, CC C, 33 C, 00 C,     
+      66 C, 99 C, 66 C, 99 C,           
+      66 C, 99 C, 66 C, 99 C, 00 C,     
+      CC C, 33 C, CC C, 33 C,           
+      CC C, 33 C, CC C, 33 C, FF C,     
+      66 C, 99 C, 66 C, 99 C,           
+      66 C, 99 C, 66 C, 99 C, FF C,     
+DECIMAL                                 
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 021
+( COLORTAB CONTINUED     <11/13/84>161) 
+EXIT                                    
+--------------------------------------- 
+( MISCELLANEOUS )                       
+HEX                                     
+      55 C, AA C, 55 C, AA C,           
+      55 C, AA C, 55 C, AA C, 00 C,     
+      55 C, AA C, 55 C, AA C,           
+      55 C, AA C, 55 C, AA C, 55 C,     
+      55 C, AA C, 55 C, AA C,           
+      55 C, AA C, 55 C, AA C, AA C,     
+      55 C, AA C, 55 C, AA C,           
+      55 C, AA C, 55 C, AA C, FF C,     
+                                        
+      55 C, 55 C, 55 C, 55 C,           
+      55 C, 55 C, 55 C, 55 C, 55 C,     
+      AA C, AA C, AA C, AA C,           
+      AA C, AA C, AA C, AA C, 55 C,     
+      55 C, 55 C, 55 C, 55 C,           
+      55 C, 55 C, 55 C, 55 C, AA C,     
+      AA C, AA C, AA C, AA C,           
+      AA C, AA C, AA C, AA C, AA C,     
+DECIMAL                                 
+                               (  RLP ) 
+-------------------------------------------- SCREEN 022
+( $SETPATTERN VARS       <11/13/84>162) 
+                                        
+CREATE   TEMPLATE      9 ALLOT          
+                                        
+CREATE PATBUF          40 ALLOT         
+                                        
+CREATE 'PATBUF         ' PATBUF ,       
+                                        
+VARIABLE LEFT.D7     0 LEFT.D7   !      
+VARIABLE LEFT.MSK    0 LEFT.MSK  !      
+VARIABLE RIGHT.D7    0 RIGHT.D7  !      
+VARIABLE RIGHT.MSK   0 RIGHT.MSK !      
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 023
+( $>PATBUF               <11/13/84>163) 
+( ALL REGISTERS PRESERVED )             
+                                        
+CODE $>PATBUF                           
+            PHA, TYA, PHA, TXA, PHA,    
+                                        
+            # 7 AND, TAX,               
+                                        
+            'PATBUF     LDA,            
+            GPATTERN    STA,            
+            'PATBUF  1+ LDA,            
+            GPATTERN 1+ STA,            
+                                        
+            TEMPLATE 8 + LDA,           
+            BITTBL ,X AND,              
+ 0= NOT IF, # 128 LDA,                  
+ THEN,      N 1+  STA,                  
+                                        
+EXIT ( MORE )                           
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 024
+( $>PATBUF               <11/13/84>164) 
+                                        
+            TEMPLATE ,X LDA,            
+            # 39 LDY,                   
+  BEGIN,    RIGHT.D7 CPY,               
+  0= NOT WHILE,                         
+            PHA, .A LSR,                
+            PLA, .A ROR,                
+            DEY,                        
+  REPEAT,                               
+  BEGIN,    PHA, .A LSR,                
+            N 1+ ORA,                   
+            PATBUF ,Y STA,              
+            PLA, .A ROR,                
+            LEFT.D7 CPY,                
+  0= NOT WHILE,                         
+            DEY,                        
+  REPEAT,                               
+            PLA, TAX, PLA, TAY, PLA,    
+            RTS, C;                     
+                                        
+EXIT                                    
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 025
+( SETPAT SETCOLOR        <11/13/84>165) 
+                                        
+VARIABLE COLOR#                         
+                                        
+: SETPAT ( ADDR -- )                    
+         TEMPLATE 9 CMOVE ;             
+                                        
+: HCOLOR ( N -- )                       
+         DUP COLOR# !                   
+         9 * COLORTAB +                 
+         SETPAT ;                       
+                                        
+: SETMODE  ( N -- ) GMODE ! ;           
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 027
+( $INVERT SUBROUTINE     <11/13/84>167) 
+                                        
+CODE $INVERTB                           
+               GBASE )Y EOR,            
+               GBASE )Y STA,            
+               RTS,                     
+END-CODE                                
+                                        
+CODE $INVERT                            
+  BEGIN,       GBASE )Y EOR,            
+               GBASE )Y STA,            
+               # 127 LDA,               
+               DEY,                     
+               LEFT.D7 CPY,             
+  0= UNTIL,    LEFT.MSK LDA,            
+               ' $INVERTB JMP,          
+END-CODE                                
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 028
+( $TURNON SUBROUTINE     <11/13/84>168) 
+                                        
+CODE $TURNONB                           
+               GBASE )Y ORA,            
+               GBASE )Y STA,            
+               RTS, C;                  
+                                        
+CODE $TURNON                            
+               GBASE )Y ORA,            
+  BEGIN,       GBASE )Y STA,            
+               # 127 LDA,               
+               DEY,                     
+               LEFT.D7  CPY,            
+  0= UNTIL,    LEFT.MSK LDA,            
+               ' $TURNONB JMP, C;       
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 029
+( $TURNOFF SUBROUTINE    <11/13/84>169) 
+                                        
+CODE $TURNOFFB-                         
+               # 255 EOR,               
+               GBASE )Y AND,            
+               GBASE )Y STA,            
+               RTS, C;                  
+                                        
+CODE $TURNOFF-                          
+               # 255 EOR,               
+               GBASE )Y AND,            
+  BEGIN,       GBASE )Y STA,            
+               # 0 LDA,                 
+               DEY,                     
+               LEFT.D7 CPY,             
+  0= UNTIL,    LEFT.MSK LDA,            
+               ' $TURNOFFB- JMP, C;     
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 030
+( $INVPAT SUBROUTINE     <11/13/84>170) 
+                                        
+CODE $INVPATTB-                         
+               # 128 ORA, N STA,        
+               # 255 EOR, GBASE )Y AND, 
+               N 1+ STA,                
+               GPATTERN )Y LDA,         
+               # 127 EOR,               
+               N AND, N 1+ ORA,         
+               GBASE )Y STA,            
+               RTS, C;                  
+                                        
+CODE $INVPATT-                          
+               ' $INVPATTB- JSR,        
+ BEGIN,        DEY,                     
+               LEFT.D7 CPY,             
+ 0= NOT WHILE, GPATTERN )Y LDA,         
+               # 127 EOR,               
+               GBASE )Y STA,            
+ REPEAT,       LEFT.MSK LDA,            
+               ' $INVPATTB- JMP, C;     
+                                        
+EXIT                                    
+                               (  RLP ) 
+-------------------------------------------- SCREEN 031
+( $ANDPAT SUBROUTINE     <11/13/84>171) 
+EXIT                                    
+--------------------------------------  
+CODE $ANDPATB                           
+                GPATTERN )Y AND,        
+                GBASE )Y AND,           
+                GBASE )Y STA,           
+                RTS,                    
+END-CODE                                
+                                        
+CODE $ANDPAT                            
+                GPATTERN )Y AND,        
+  BEGIN,        GBASE )Y AND,           
+                GBASE )Y STA,           
+                DEY,                    
+                LEFT.D7 CPY,            
+  0= NOT WHILE, GPATTERN )Y LDA,        
+  REPEAT,       LEFT.MSK LDA,           
+                ' $ANDPATB JMP,         
+END-CODE                                
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 032
+( $EORPAT SUBROUTINE     <11/13/84>172) 
+                                        
+CODE $EORPATB                           
+                # 128 ORA,              
+                GPATTERN )Y AND,        
+                GBASE )Y EOR,           
+                GBASE )Y STA,           
+                RTS,                    
+END-CODE                                
+                                        
+CODE $EORPAT                            
+                # 128 ORA,              
+                GPATTERN )Y AND,        
+  BEGIN,        GBASE )Y EOR,           
+                GBASE )Y STA,           
+                DEY,                    
+                LEFT.D7 CPY,            
+  0= NOT WHILE, GPATTERN )Y LDA,        
+  REPEAT,       LEFT.MSK LDA,           
+                ' $EORPATB JMP,         
+END-CODE                                
+                                        
+EXIT                                    
+                               (  RLP ) 
+-------------------------------------------- SCREEN 033
+( FILLPAT                <11/13/84>173) 
+                                        
+CODE $FILLPATB  # 128 ORA,              
+                N STA,                  
+                GBASE )Y LDA,           
+                GPATTERN )Y EOR,        
+                N AND,                  
+                GBASE )Y EOR,           
+                GBASE )Y STA,           
+                RTS, C;                 
+                                        
+CODE $FILLPAT                           
+                ' $FILLPATB JSR,        
+  BEGIN,        DEY,                    
+                LEFT.D7 CPY,            
+  0= NOT WHILE, GPATTERN )Y LDA,        
+                GBASE )Y STA,           
+  REPEAT,       LEFT.MSK LDA,           
+                ' $FILLPATB JMP, C;     
+                                        
+EXIT                                    
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 034
+( $D-HLINE               <11/13/84>174) 
+                                        
+CODE $D-HLINE                           
+             PHA,                       
+             GMODE LDA, N STA, N INC,   
+             PLA,                       
+             N DEC,                     
+    0= IF,   ' $INVERTB  JMP,           
+    THEN,    N DEC,                     
+    0= IF,   ' $TURNONB  JMP,           
+    THEN,    N DEC,                     
+    0= IF,   ' $TURNOFFB- JMP,          
+    THEN,    N DEC,                     
+\   0= IF,   ' $ANDPATB  JMP,           
+\   THEN,    N DEC,                     
+    0= IF,   ' $INVPATTB- JMP,          
+    THEN,    N DEC,                     
+    0= IF,   ' $EORPATB  JMP,           
+    THEN,                               
+             ' $FILLPATB JMP, C;        
+EXIT                                    
+--------------------------------------  
+ENTRY POINT WHEN LEFT AND               
+RIGHT ARE IN THE SAME BYTE     (  RLP ) 
+-------------------------------------------- SCREEN 035
+( $C-HLINE               <11/13/84>175) 
+                                        
+CODE $C-HLINE                           
+             PHA,                       
+             GMODE LDA, N STA, N INC,   
+             PLA,                       
+             N DEC,                     
+    0= IF,   ' $INVERT   JMP,           
+    THEN,    N DEC,                     
+    0= IF,   ' $TURNON   JMP,           
+    THEN,    N DEC,                     
+    0= IF,   ' $TURNOFF- JMP,           
+    THEN,    N DEC,                     
+\   0= IF,   ' $ANDPAT   JMP,           
+\   THEN,    N DEC,                     
+    0= IF,   ' $INVPATT- JMP,           
+    THEN,    N DEC,                     
+    0= IF,   ' $EORPAT   JMP,           
+    THEN,                               
+             ' $FILLPAT  JMP,           
+END-CODE                                
+EXIT ---------------------------------- 
+ENTRY POINT WHEN LEFT AND               
+RIGHT ARE IN DIFFERENT BYTES   (  RLP ) 
+-------------------------------------------- SCREEN 036
+( $HLINEB $HLINE         < 2/ 4/85>176) 
+                                        
+CODE $HLINEB                            
+  # 192 CPX,      CS IF, RTS, THEN,     
+  RIGHT.MSK LDA,                        
+  RIGHT.D7 LDY,                         
+  # 40 CPY,       CS IF, RTS, THEN,     
+  LEFT.D7 CPY,    CS NOT IF, RTS, THEN, 
+  0= IF, LEFT.MSK  AND,                 
+         ' $D-HLINE JMP,                
+  ELSE,  ' $C-HLINE JMP,                
+  THEN,  C;                             
+                                        
+CODE $HLINE                             
+         # 192 CPX, CS IF, RTS, THEN,   
+         ' $>PATBUF JSR,                
+         ' $YADDR JSR,                  
+         ' $HLINEB JMP, C;              
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+-------------------------------------------- SCREEN 037
+( HLINEB  HLINE          <11/16/84>177) 
+                                        
+\ HLINE :   draw horizontal line        
+\           within current end points   
+\           "X" = y line #              
+                                        
+CODE HLINE ( y -- )                     
+      XSAVE STX, BOT LDA, TAX,          
+      ' $HLINE JSR,                     
+      XSAVE LDX, POP JMP, C;            
+                                        
+\ HLINEB :  draw horizontal line        
+\           when pattern address        
+\           (GPATTERN) has been         
+\           previously computed         
+                                        
+CODE HLINEB ( y -- )                    
+      TXA, PHA, BOT LDA, TAX,           
+      ' $YADDR JSR,                     
+      ' $HLINEB JSR,                    
+      PLA, TAX, POP JMP, C;             
+EXIT                                    
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 038
+( SETENDPTS              <11/13/84>178) 
+                                        
+: SETENDPTS ( X1 X2 -- )                
+      DDUP > IF SWAP THEN               
+                                        
+      0 MAX 279 MIN                     
+      7/MOD RIGHT.D7 !                  
+      RMASKS + C@ RIGHT.MSK !           
+                                        
+      0 MAX 279 MIN                     
+      7/MOD LEFT.D7 !                   
+      LMASKS + C@ LEFT.MSK ! ;          
+                                        
+0 279 SETENDPTS                         
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 039
+( $7/MOD                 <12/13/86>179) 
+                                        
+CODE $B/MOD                             
+            N STX, ( divisor )          
+            &QUO STA, ( dividend lsb )  
+            PHA, TYA, PHA, ( " msb )    
+            # 8 LDY,                    
+ BEGIN,     &QUO ASL,                   
+            .A ROL,                     
+            N CMP,                      
+  CS IF,    N SBC,                      
+            &QUO INC,                   
+  THEN,     DEY,                        
+ 0= UNTIL,  &REM STA,                   
+            PLA, TAY, PLA, RTS,         
+END-CODE                                
+                                        
+CODE $7/MOD                             
+         N STA, TXA, PHA,               
+         N LDA, # 7 LDX,                
+         ' $B/MOD JSR,                  
+         PLA, TAX, RTS, C;              
+                                        
+                               ( LRP  ) 
+-------------------------------------------- SCREEN 040
+( $HPLOT                 < 1/29/85>180) 
+                                        
+\ plot point at {x,y}                   
+\ entry: "X" = y coord                  
+\ "A" = x coord lsb "Y" = x coord msb   
+                                        
+CODE $HPLOT                             
+            # 192 CPX,                  
+  CS IF,    RTS,                        
+  THEN,                                 
+            N STA,                      
+            PHA, TXA, PHA, TYA, PHA,    
+            N LDA,                      
+            ' $7/MOD JSR,               
+            ' $YADDR JSR,               
+            &QUO LDA,                   
+            LEFT.D7 STA,                
+            RIGHT.D7 STA,               
+                                        
+EXIT ( more ... )                       
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 041
+( $HPLOT CONTINUED       <11/13/84>181) 
+                                        
+            &REM LDY,                   
+            LMASKS ,Y LDA,              
+            LEFT.MSK  STA,              
+            # 6 CPY,                    
+ CS IF,     RIGHT.D7 INC,               
+            # 0 LDY,                    
+ ELSE,      INY,                        
+ THEN,                                  
+            RMASKS ,Y LDA,              
+            RIGHT.MSK STA,              
+            ' $HLINE JSR,               
+            PLA, TAY, PLA, TAX, PLA,    
+            RTS, C;                     
+                                        
+EXIT                                    
+--------------------------------------  
+Note: will wrap around                  
+      if plotting at x = 279            
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 042
+( HPLOT                  <11/16/84>182) 
+                                        
+CODE HPLOT ( x y -- )                   
+         XSAVE STX,                     
+         SEC    LDA, PHA,    ( xlo )    
+         SEC 1+ LDA, TAY,    ( xhi )    
+         BOT    LDA, TAX,    ( ylo )    
+         PLA,                           
+         ' $HPLOT JSR,                  
+         XSAVE LDX,                     
+         POPTWO JMP, C;                 
+                                        
+EXIT                                    
+--------------------------------------  
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 043
+(                        <11/13/84>183) 
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 044
+(                        <11/13/84>184) 
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 045
+( VBAR   FS              < 1/15/85>185) 
+VARIABLE VY1   VARIABLE VY2             
+                                        
+CODE $VLINE    TXA, PHA,     VY1 LDX,   
+ BEGIN,        ' $HLINE JSR, VY2 CPX,   
+ CS NOT WHILE, INX,                     
+ REPEAT,       PLA, TAX, RTS, C;        
+                                        
+\ name changed from VLINE               
+\ draw vertical line/bar                
+\ within current end points             
+: VBAR ( y1 y2 -- )                     
+   DDUP > IF SWAP THEN                  
+   0 MAX 191 MIN VY2 !                  
+   0 MAX 191 MIN VY1 !                  
+   ' $VLINE CALL ;                      
+                                        
+: VLINE VBAR ;                          
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+-------------------------------------------- SCREEN 046
+( FS                     < 1/15/85>186) 
+                                        
+\ fill screen with color                
+: FS ( n -- ) HCOLOR                    
+   0 279 SETENDPTS 0 191 VBAR ;         
+                                        
+: BAR ( width height x y -- )           
+   4 PICK 0= 4 PICK 0= OR               
+   IF    DDROP DDROP                    
+   ELSE  ROT >R >R SWAP ( x w | y h )   
+         DUP 0< IF OVER + 1+            
+              ELSE OVER + 1-            
+         THEN SETENDPTS                 
+         R> R>                          
+         DUP 0< IF OVER + 1+            
+              ELSE OVER + 1-            
+         THEN VBAR                      
+   THEN ;                               
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 048
+(                        <11/13/84>188) 
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 049
+(                        <11/13/84>189) 
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 050
+( V.2 CHARACTER DRAW     <12/ 7/84>190) 
+                                        
+WIDTH 5 MAX ' WIDTH !                   
+                                        
+: CTASK ;                               
+                                        
+EXIT                                    
+--------------------------------------- 
+V.2 character draw                      
+      character is surrounded           
+      on all sides by 1-bit boundary    
+                                        
+Character Format:                       
+                                        
+ 1 byte  Width in bits                  
+ 1 byte  Height in scan lines           
+ N bytes character data;                
+         each scan line is              
+         left-justified on              
+         a byte boundary                
+                                        
+Usage:   <addr> <xpos> <ypos> CDRAW     
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 051
+( CDRAW                  <11/13/84>191) 
+                                        
+VARIABLE CHADDR ( addr of char data  )  
+VARIABLE CHX    ( x draw pos.        )  
+VARIABLE CHY    ( y draw pos.        )  
+VARIABLE CBITS  ( char width in bits )  
+VARIABLE CBYTES ( width in bytes     )  
+VARIABLE CHGT   ( height in lines    )  
+VARIABLE CPIX   ( pixel offset (draw )  
+                                        
+PATBUF CONSTANT CHARBUF                 
+                                        
+VARIABLE 'CHARBUF   CHARBUF 'CHARBUF !  
+                                        
+ 2 CONSTANT CDELX   ( space between  )  
+ 2 CONSTANT CDELY   ( letters        )  
+                                        
+VARIABLE C.RGT.D7                       
+VARIABLE C.RGT.MSK                      
+EXIT                                    
+--------------------------------------- 
+CDELX and CDELY are used by <GEMIT>     
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 052
+( $CSHIFT                <11/13/84>192) 
+                                        
+CODE $CSHIFT   TXA, PHA, TYA, PHA,      
+               CPIX LDX, INX,           
+ BEGIN,        DEX,                     
+ 0< NOT WHILE, LEFT.D7 LDY,             
+               DEY, CLC, PHP,           
+  BEGIN,       INY,                     
+               CHARBUF ,Y LDA,          
+               PLP, .A ROL, PHA,        
+               # 127 AND, N STA,        
+               GBASE )Y LDA,            
+               # 128 AND, N ORA,        
+               CHARBUF ,Y STA,          
+               PLA, .A ASL, PHP,        
+               C.RGT.D7 CPY,            
+  0= UNTIL,    PLP,                     
+ REPEAT,      C.RGT.MSK LDA, # 128 ORA, 
+               CHARBUF ,Y AND,          
+               CHARBUF ,Y STA,          
+               PLA, TAY, PLA, TAX,      
+               RTS, C;                  
+EXIT                                    
+                               (  RLP ) 
+-------------------------------------------- SCREEN 053
+( $CHLIN                 <11/13/84>193) 
+                                        
+CODE $CHLIN                             
+                  TYA, PHA,             
+                  ' $YADDR JSR,         
+                  GMODE LDA, # 3 CMP,   
+ CS IF,           # 39 LDY,             
+  BEGIN,          GBASE )Y LDA,         
+                  # 128 AND,            
+                  CHARBUF ,Y STA,       
+                  C.RGT.D7 CPY,         
+  0= NOT WHILE,   DEY,                  
+  REPEAT,         LEFT.D7 LDA, CLC,     
+                  CBYTES ADC,           
+                  C.RGT.D7 CMP,         
+  CS IF,          C.RGT.D7 LDY,         
+  ELSE,           TAY,                  
+  THEN,                                 
+                                        
+--> ( more ... )                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 054
+( $CHLIN cont'd          <11/13/84>194) 
+                                        
+  BEGIN,          GFIG )Y LDA,          
+                  CHARBUF ,Y STA,       
+                  LEFT.D7 CPY,          
+  0= NOT WHILE,   DEY,                  
+  REPEAT,                               
+                  ' $CSHIFT JSR,        
+                                        
+                  CBYTES LDA, CLC,      
+                  GFIG ADC,             
+                  GFIG STA,             
+   CS IF,         GFIG 1+ INC,          
+   THEN,                                
+ THEN,                                  
+                  ' $HLINEB JSR,        
+                  PLA, TAY, RTS, C;     
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 055
+( $CLRLIN                <11/13/84>195) 
+                                        
+CODE $CLRLIN                            
+               TYA, PHA,                
+               ' $YADDR JSR,            
+               RIGHT.D7 LDY,            
+ BEGIN,        GBASE )Y LDA,            
+               # 128 AND,               
+               CHARBUF ,Y STA,          
+               LEFT.D7 CPY,             
+ 0= NOT WHILE, DEY,                     
+ REPEAT,                                
+               ' $HLINEB JSR,           
+               PLA, TAY,                
+               RTS, C;                  
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 056
+( $CDRAW                 <11/13/84>196) 
+                                        
+CODE $CDRAW       TXA, PHA, TYA, PHA,   
+                  ' CDELY LDA,          
+  0< NOT IF,                            
+    0= NOT IF,    CHY LDX,              
+                  ' $CLRLIN JSR,        
+                  INX,                  
+  THEN, THEN,                           
+                  CHGT LDY, INY,        
+  BEGIN,          DEY,                  
+  0= NOT WHILE,                         
+                  ' $CHLIN JSR,         
+                  INX,                  
+  REPEAT,                               
+                  ' CDELY LDA,          
+  0< NOT IF,      # 2 CMP,              
+    CS IF,        ' $CLRLIN JSR,        
+  THEN, THEN,     PLA, TAY, PLA, TAX,   
+                  RTS, C;               
+                                        
+EXIT                                    
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 057
+( CD-INIT2               <11/13/84>197) 
+                                        
+VARIABLE &GFIG                          
+                                        
+: CD-INIT2 ( -- )                       
+            CBITS @ 6 + 7/ CBYTES !     
+            &GFIG @ LEFT.D7 @ - GFIG !  
+            CHARBUF GPATTERN ! ;        
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 058
+( CD-INIT                <12/12/84>198) 
+                                        
+: CD-INIT ( ADDR X Y -- )               
+  ( Y )     0 MAX 191 MIN CHY !         
+  ( X )     0 MAX 279 MIN CHX !         
+  ( ADDR )  DUP    C@ CBITS !           
+  ( ADDR )  DUP 1+ C@ CHGT !            
+  ( ADDR )  2+ &GFIG !                  
+                                        
+            CHX @ 7/MOD  LEFT.D7 !      
+               DUP CPIX !               
+               LMASKS + C@ LEFT.MSK !   
+                                        
+            CHX @ CBITS @ + 279 MIN     
+            DUP 7/MOD                   
+               C.RGT.D7 !               
+               RMASKS + C@ C.RGT.MSK !  
+            CDELX + 1- 279 MIN 7/MOD    
+               RIGHT.D7 !               
+               RMASKS + C@ RIGHT.MSK !  
+                                        
+            CD-INIT2 ;                  
+                                        
+EXIT (  RLP )                  (  RLP ) 
+-------------------------------------------- SCREEN 059
+( CDRAW                  <11/13/84>199) 
+                                        
+: CDRAW ( ADDR X Y -- )                 
+         CD-INIT                        
+         ' $CDRAW CALL ;                
+                                        
+EXIT                                    
+ ------------------------------------   
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 060
+( $DOT -- REVECTORABLE   < 1/29/85>200) 
+VARIABLE DOTX                           
+VARIABLE DOTY                           
+\ VARIABLE DOTSUBR                      
+                                        
+CODE <1PLOT>                            
+         XSAVE STX,                     
+         DOTX     LDA, ( x lsb )        
+         DOTX  1+ LDY, ( x msb )        
+         DOTY     LDX, ( y lsb )        
+         ' $HPLOT JSR,                  
+         XSAVE LDX, NEXT JMP, C;        
+                                        
+: <DOT>                                 
+   DOTX @ 279 U< DOTY @ 192 U<          
+   AND IF <1PLOT> THEN ;                
+                                        
+: DOT ( x y -- )                        
+   DOTY ! DOTX ! <DOT> ;                
+                                        
+EXIT                                    
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 061
+( LINE -- HIGH LEVEL     <11/13/84>201) 
+                                        
+WIDTH 5 MAX ' WIDTH !                   
+                                        
+VARIABLE LX1      VARIABLE LY1          
+VARIABLE LX2      VARIABLE LY2          
+VARIABLE LXTEM    VARIABLE LYTEM        
+                                        
+VARIABLE DELSX    VARIABLE DELDX        
+VARIABLE DELSY    VARIABLE DELDY        
+VARIABLE DELSE    VARIABLE DELDE        
+                                        
+VARIABLE DELS                           
+VARIABLE DELP                           
+VARIABLE LERR                           
+                                        
+VARIABLE DCNT                           
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+-------------------------------------------- SCREEN 062
+( $BRES                  <11/13/84>202) 
+EXIT                                    
+--------------------------------------- 
+\ code version                          
+                                        
+CODE $STRAIGHT                          
+            DELSE    LDA, CLC,          
+            LERR     ADC, LERR     STA, 
+            DELSE 1+ LDA,               
+            LERR 1+  ADC, LERR 1+  STA, 
+                                        
+            DELSX    LDA, CLC,          
+            DOTX     ADC, DOTX     STA, 
+            DELSX 1+ LDA,               
+            DOTX  1+ ADC, DOTX  1+ STA, 
+                                        
+            DELSY    LDA, CLC,          
+            DOTY     ADC, DOTY     STA, 
+            DELSY 1+ LDA,               
+            DOTY  1+ ADC, DOTY  1+ STA, 
+                                        
+            RTS,                        
+END-CODE                                
+                               (  RLP ) 
+-------------------------------------------- SCREEN 063
+( $BRES CONTINUED        <11/13/84>203) 
+EXIT                                    
+--------------------------------------- 
+\ code version                          
+                                        
+CODE $DIAGONAL                          
+            DELDE    LDA, CLC,          
+            LERR     ADC, LERR     STA, 
+            DELDE 1+ LDA,               
+            LERR 1+  ADC, LERR 1+  STA, 
+                                        
+            DELDX    LDA, CLC,          
+            DOTX     ADC, DOTX     STA, 
+            DELDX 1+ LDA,               
+            DOTX  1+ ADC, DOTX  1+ STA, 
+                                        
+            DELDY    LDA, CLC,          
+            DOTY     ADC, DOTY     STA, 
+            DELDY 1+ LDA,               
+            DOTY  1+ ADC, DOTY  1+ STA, 
+                                        
+            RTS,                        
+END-CODE                                
+                               (  RLP ) 
+-------------------------------------------- SCREEN 064
+( $BRES continued        <11/13/84>204) 
+EXIT                                    
+--------------------------------------- 
+\ code version                          
+\ registers are *NOT* preserved         
+                                        
+CODE $BRES                              
+            LX1     LDA, DOTX    STA,   
+            LX1 1+  LDA, DOTX 1+ STA,   
+            LY1     LDA, DOTY    STA,   
+            LY1 1+  LDA, DOTY 1+ STA,   
+                                        
+            DELS    LDA, DCNT    STA,   
+            DELS 1+ LDA, DCNT 1+ STA,   
+                                        
+            DCNT    INC,                
+ 0= IF,     DCNT 1+ INC,                
+ THEN,                                  
+                                        
+--> ( more ... )                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 065
+( $BRES cnt'd   <BRES>   <11/13/84>205) 
+EXIT                                    
+--------------------------------------- 
+\ code version continued                
+                                        
+ BEGIN,                                 
+            ' $DOT   JSR,               
+                                        
+            LERR 1+  LDA,               
+    0< IF,  ' $STRAIGHT JSR,            
+    ELSE,   ' $DIAGONAL JSR,            
+    THEN,                               
+            DCNT     LDA,               
+    0= IF,  DCNT 1+  DEC,               
+    THEN,   DCNT     DEC,               
+            DCNT 1+  LDA,               
+ 0< UNTIL,  RTS,                        
+END-CODE                                
+                                        
+                                        
+: <BRES>  ' $BRES CALL ;                
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 066
+( BRES high level version<11/13/84>206) 
+                                        
+: BRES ( -- )                           
+    LX1 @ DOTX !                        
+    LY1 @ DOTY !                        
+    DELS @ 1+ 0 DO                      
+        <DOT>                           
+        LERR @ 0< IF                    
+               DELSE @ LERR +!          
+               DELSX @ DOTX +!          
+               DELSY @ DOTY +!          
+        ELSE                            
+               DELDE @ LERR +!          
+               DELDX @ DOTX +!          
+               DELDY @ DOTY +!          
+        THEN                            
+    LOOP ;                              
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 067
+( BRESENHAM'S ALGORITHM  <11/13/84>207) 
+                                        
+: BRESENHAM ( -- )                      
+      LY2 @ LY1 @ -                     
+      DUP 0< IF ABS -1 ELSE 1 THEN      
+      DELDY ! DELP !                    
+                                        
+      LX2 @ LX1 @ -                     
+      DUP 0< IF ABS -1 ELSE 1 THEN      
+      DELDX ! DELS !                    
+                                        
+      DELS @ DELP @ <                   
+      IF    DELS @ DELP @ DELS ! DELP ! 
+            0 DELSX ! DELDY @ DELSY !   
+      ELSE  0 DELSY ! DELDX @ DELSX !   
+      THEN                              
+                                        
+      DELP @ 2* DUP DELSE !             
+      DELS @ -  DUP LERR  !             
+      DELS @ -      DELDE !             
+      BRES ;                            
+EXIT                                    
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 068
+( LINE                   <11/13/84>208) 
+                                        
+: LINE ( X1 Y1 X2 Y2 -- )               
+      LY2 ! LX2 ! LY1 ! LX1 !           
+      BRESENHAM ;                       
+                                        
+: RELINE ( -- ) BRESENHAM ;             
+                                        
+EXIT                                    
+--------------------------------------  
+RELINE draws a line using the end       
+points of the previous line.            
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 069
+( RANDOM                 <11/13/84>209) 
+                                        
+  VARIABLE SEED                         
+                                        
+: RANDOM ( N -- I )                     
+         SEED @ U* SWAP DROP            
+         SEED @ 25717 U* DROP           
+         4311 + SEED ! ;                
+                                        
+: RANPT 280 RANDOM 192 RANDOM ;         
+                                        
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 070
+( AFILL                  <11/13/84>210) 
+( SIMPLE-MINDED AREA FILL )             
+                                        
+                                        
+VARIABLE MATCHME   0 MATCHME !          
+                                        
+-->                                     
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 071
+( $SCANL                 <11/13/84>211) 
+( "Y" = X OFFSET          )             
+( ALL REGISTERS PRESERVED )             
+CODE $SCANL                             
+            PHA, TYA, PHA,              
+BEGIN,      # 0 CPY,                    
+  0= IF,    LEFT.D7 STY,                
+            # 127 LDA, LEFT.MSK STA,    
+            PLA, TAY, PLA, RTS,         
+  THEN,     DEY, LEFT.D7 STY,           
+            GBASE )Y LDA,               
+            MATCHME EOR, # 127 AND,     
+0= NOT UNTIL,                           
+            .A ROL,                     
+            # 7 LDY,                    
+BEGIN,      .A ROL,                     
+ CS NOT IF, DEY,                        
+  0< IF,    INY, SEC,                   
+ THEN, THEN,                            
+CS UNTIL,   LMASKS ,Y LDA,              
+            LEFT.MSK STA,               
+            PLA, TAY, PLA, RTS,         
+END-CODE                                
+-->                            (  RLP ) 
+-------------------------------------------- SCREEN 072
+( $SCANR                 <11/13/84>212) 
+( "Y" = X OFFSET          )             
+( ALL REGISTERS PRESERVED )             
+                                        
+CODE $SCANR                             
+            PHA, TYA, PHA,              
+BEGIN,      RIGHT.D7 STY,               
+            GBASE )Y LDA,               
+            MATCHME EOR, # 127 AND,     
+ 0= WHILE,  # 39 CPY,                   
+  0= IF,    # 127 LDA, RIGHT.MSK STA,   
+            PLA, TAY, PLA, RTS,         
+  THEN,     INY,                        
+REPEAT,                                 
+            # 255 LDY,                  
+BEGIN,      INY,                        
+            .A ROR,                     
+CS UNTIL,                               
+            RMASKS ,Y LDA,              
+            RIGHT.MSK STA,              
+            PLA, TAY, PLA, RTS,         
+END-CODE                                
+-->                                     
+                               (  RLP ) 
+-------------------------------------------- SCREEN 073
+( $AFILLD                <11/13/84>213) 
+( "X" = Y COORD           )             
+( "Y" = X OFFSET          )             
+( ALL REGISTERS PRESERVED )             
+                                        
+CODE $AFILLD                            
+            PHA, TXA, PHA,              
+BEGIN,      # 0 CPX,                    
+ 0= NOT WHILE,                          
+            DEX,                        
+            ' $YADDR JSR,               
+            GBASE )Y LDA, # 127 AND,    
+            MATCHME CMP,                
+ 0= NOT IF, PLA, TAX, PLA, RTS,         
+ THEN,                                  
+            TYA, PHA, TXA, PHA,         
+            ' $SCANR JSR,               
+            ' $SCANL JSR,               
+            ' $HLINE JSR,               
+            PLA, TAX, PLA, TAY,         
+REPEAT,     PLA, TAX, PLA, RTS,         
+END-CODE                                
+-->                                     
+                               (  RLP ) 
+-------------------------------------------- SCREEN 074
+( $AFILLU                <11/13/84>214) 
+( "X" = Y COORD           )             
+( "Y" = X OFFSET          )             
+( ALL REGISTERS PRESERVED )             
+                                        
+CODE $AFILLU                            
+            PHA, TXA, PHA,              
+BEGIN,      ' $YADDR JSR,               
+            GBASE )Y LDA, # 127 AND,    
+            MATCHME CMP,                
+ 0= NOT IF, PLA, TAX, PLA, RTS,         
+ THEN,                                  
+            TYA, PHA, TXA, PHA,         
+            ' $SCANR JSR,               
+            ' $SCANL JSR,               
+            ' $HLINE JSR,               
+            PLA, TAX, PLA, TAY,         
+                                        
+            INX, # 192 CPX,             
+0= UNTIL,   PLA, TAX, PLA, RTS,         
+END-CODE                                
+-->                                     
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 075
+( $AFILL                 <11/13/84>215) 
+( ENTRY: "X" = Y COORD     )            
+(        "A" = X COORD LSB )            
+(        "Y" = X COORD MSB )            
+( REGISTERS NOT PRESERVED  )            
+                                        
+CODE $AFILL                             
+            ' $7/MOD JSR,               
+            ' $YADDR JSR,               
+            &QUO LDY,                   
+            GBASE )Y LDA, # 127 AND,    
+            # 0 CMP,                    
+0= NOT IF,  # 127 CMP,                  
+ 0= NOT IF, RTS,                        
+THEN, THEN,                             
+            MATCHME STA,                
+            ' $AFILLD JSR,              
+            ' $AFILLU JSR,              
+            RTS,                        
+END-CODE                                
+-->                                     
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 076
+( AFILL                  <11/13/84>216) 
+                                        
+CODE $PULLXY                            
+         SEC    LDA, PHA,    ( xlo )    
+         SEC 1+ LDA, TAY,    ( xhi )    
+         BOT    LDA, TAX,    ( ylo )    
+                PLA, RTS, C;            
+                                        
+CODE AFILL ( X Y -- )                   
+            XSAVE STX,                  
+            ' $PULLXY JSR,              
+            ' $AFILL JSR,               
+            XSAVE LDX,                  
+            POPTWO JMP,                 
+END-CODE                                
+                                        
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+-------------------------------------------- SCREEN 080
+( ASCTAB                 <11/13/84>220) 
+                                        
+: GTASK ;                               
+                                        
+: GETMODE GMODE C@ ;                    
+                                        
+CREATE ASCTAB  1624 ALLOT               
+                                        
+CR CR ." getting 9-point font " CR CR   
+                                        
+276 BLOCK ASCTAB        1024 CMOVE      
+277 BLOCK ASCTAB 1024 +  600 CMOVE      
+                                        
+WIDTH 5 ' WIDTH !                       
+   ASCTAB 262 + @ CONSTANT CMAXX        
+   ASCTAB 258 + @ CONSTANT CMAXY        
+' WIDTH !                               
+                                        
+: >COFFSET 2* ASCTAB + ;                
+: >CDATA >COFFSET @ ASCTAB + 270 + ;    
+                                        
+EXIT                                    
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 081
+( MARGINS !CURSOR        <11/13/84>221) 
+                                        
+VARIABLE LMARG    0  LMARG !            
+VARIABLE RMARG  279  RMARG !            
+VARIABLE TMARG    0  TMARG !            
+VARIABLE BMARG  191  BMARG !            
+                                        
+VARIABLE GX      ( current char )       
+VARIABLE GY      ( position )           
+                                        
+: !CURSOR ( x y -- ) GY ! GX ! ;        
+: @CURSOR ( -- x y ) GX @ GY @ ;        
+                                        
+: !XY1 ( x1 y1 -- ) TMARG ! LMARG ! ;   
+                                        
+: !XY2 ( x2 y2 -- ) BMARG ! RMARG ! ;   
+                                        
+: !WINDOW ( x1 y1 x2 y2 -- )            
+      !XY2 !XY1 ;                       
+                                        
+                                        
+EXIT                                    
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 082
+( <GEMIT>                < 1/16/85>222) 
+                                        
+: <GEMIT> ( CH -- )                     
+   DUP 128 <                            
+   IF DUP >COFFSET @                    
+      IF DUP >CDATA                     
+         DUP @CURSOR CDRAW              
+         C@ CDELX + GX +!               
+   THEN THEN DROP ;                     
+                                        
+                                        
+EXIT                                    
+--------------------------------------  
+does not recognize carriage return,     
+line feed, back space, etc.             
+clips at right and bottom of screen     
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 083
+( GHOME GPAGE CLW        <11/13/84>223) 
+                                        
+: GHOME  LMARG @ TMARG @ !CURSOR ;      
+                                        
+( clear window )                        
+                                        
+: CLW    GETMODE 2 SETMODE              
+         LMARG @ RMARG @ SETENDPTS      
+         TMARG @ BMARG @ VBAR           
+         SETMODE ;                      
+                                        
+: GPAGE  GHOME CLW ;                    
+                                        
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 084
+( GCR GKEY               <11/13/84>224) 
+                                        
+: KDELAY                                
+   400 0 DO QTERM IF LEAVE THEN LOOP ;  
+                                        
+: GCUR   GETMODE 0 SETMODE              
+         BL >CDATA                      
+         DUP @CURSOR CDRAW  KDELAY      
+         DUP @CURSOR CDRAW  KDELAY      
+         DROP SETMODE ;                 
+                                        
+: GCR    LMARG @ GX !                   
+         CMAXY CDELY + GY +! ;          
+                                        
+: GKEY ( -- ch )                        
+   BEGIN GCUR QTERM UNTIL <KEY> ;       
+                                        
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 085
+( GBKSP GPUTC            <11/13/84>225) 
+                                        
+: GBKSP ( addr pos ch -- addr pos )     
+      GETMODE >R 2 SETMODE              
+      DROP DUP 0>                       
+      IF 1- DDUP +                      
+         DUP C@                         
+         BL ROT C!                      
+         DUP >CDATA C@ CDELX +          
+            NEGATE GX +!                
+            GX @ >R                     
+         <GEMIT>                        
+            R> GX !                     
+      ELSE BEEP THEN                    
+      R> SETMODE ;                      
+                                        
+: GPUTC ( addr pos ch -- addr pos )     
+      DUP <GEMIT>                       
+      3 PICK 3 PICK + C! 1+ ;           
+                                        
+                                        
+EXIT                                    
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 086
+( GCTRL GBLANK           <11/13/84>226) 
+                                        
+VARIABLE ?ESCAPE                        
+                                        
+: GCTRL ( addr pos ch -- addr pos )     
+      DROP BEEP ;                       
+                                        
+: GBLANK ( addr pos ch -- addr pos )    
+      OVER 0>                           
+      IF GPUTC ELSE GCTRL THEN ;        
+                                        
+                                        
+\ GEXPECT is done when either           
+\ Return or Escape is pressed           
+                                        
+: ?GDONE ( addr pos ch -- addr pos ch ) 
+      DUP 27 = ?ESCAPE !                
+      DUP 27 = OVER 13 = OR ;           
+                                        
+                                        
+EXIT                                    
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 087
+( GEXPECT                <11/13/84>227) 
+                                        
+: GEXPECT ( addr count -- )             
+   DDUP BL FILL ( count ) >R            
+   0  BEGIN                             
+         GKEY ?GDONE NOT                
+      WHILE                             
+         DUP 8 = OVER 127 = OR          
+            IF GBKSP  ELSE              
+         DUP BL <                       
+            IF GCTRL  ELSE              
+         OVER R@ < NOT                  
+            IF GCTRL  ELSE              
+         DUP BL =                       
+            IF GBLANK ELSE              
+               GPUTC                    
+         THEN THEN THEN THEN            
+      REPEAT ( ch ) DROP                
+     R> DROP DDROP ;                    
+                                        
+EXIT                                    
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 088
+( GINPUT TEST            <11/13/84>228) 
+                                        
+: GEMIT <GEMIT> ;                       
+                                        
+: GINPUT ( addr count -- )              
+      OVER 1+ OVER GEXPECT              
+      OVER 1+ SWAP -TRAILING            
+      ROT C! DROP ;                     
+                                        
+                                        
+EXIT                                    
+--------------------------------------  
+                                        
+: TEST   PAGE 0 20 XYTAB ." TEST: "     
+         1HG                            
+         PAD 12 GINPUT                  
+         PAD COUNT TYPE                 
+         SPACE PAD COUNT . DROP ;       
+: TEST2  0 0 279 191 !WINDOW GPAGE      
+         GHOME                          
+         26 0 DO I 65 + GEMIT LOOP ;    
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 089
+( GETN                   <11/13/84>229) 
+VARIABLE GVAL                           
+                                        
+: GETN ( min max addr count -- val )    
+  >R SWAP >R SWAP >R CR                 
+  ( I = min I' = max J = count )        
+  ( addr ) DUP J BL FILL 0 GVAL !       
+  0 BEGIN                               
+     BEGIN GKEY DUP 13 = NOT            
+     WHILE <.S> CR                      
+      DUP 8 = OVER 127 = OR             
+        IF GBKSP GVAL @ 10 / GVAL !     
+      ELSE OVER J < NOT IF GCTRL        
+      ELSE DUP ASCII 0 - DUP 10 U<      
+        IF GVAL @ 10 * +  DUP I' >      
+          IF DROP GCTRL                 
+          ELSE GVAL ! GPUTC THEN        
+      ELSE DROP GCTRL THEN THEN THEN    
+     REPEAT GVAL @ I <                  
+    WHILE ( 13 ) GCTRL                  
+    REPEAT R> R> R> DDROP DDROP DDROP   
+  GVAL @ ;                              
+                                        
+EXIT                           (  RLP ) 
+-------------------------------------------- SCREEN 090
+( XBLOCK                 <11/13/84>230) 
+                                        
+\ draw a block big enough               
+\ to center a character                 
+                                        
+: XBLOCK ( -- )                         
+   GX @ CMAXX OVER + CDELX + 1-         
+      SETENDPTS                         
+   GY @ CMAXY OVER + CDELY + 1-         
+      VBAR ;                            
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 091
+( XEMIT                  <11/13/84>231) 
+                                        
+\ print character in inverse            
+\ and center it in a block              
+                                        
+: XEMIT ( ch -- )                       
+   GETMODE >R                           
+   GX @ >R                              
+   1 SETMODE XBLOCK                     
+   CMAXX CDELX + 1-                     
+      OVER >CDATA C@ - 2/ GX +!         
+   3 SETMODE <GEMIT>                    
+   R> CMAXX + CDELX + 1+ GX !           
+   R> SETMODE ;                         
+                                        
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 092
+( XKEY                   <11/13/84>232) 
+                                        
+\ Assume character has been drawn       
+\ by "XEMIT" at [GX,GY].                
+\ Flash box until a key is pressed.     
+                                        
+: XKEY ( -- ch )                        
+   GETMODE >R                           
+   0 SETMODE                            
+   @CURSOR                              
+   BEGIN                                
+         DDUP !CURSOR XBLOCK KDELAY     
+         DDUP !CURSOR XBLOCK KDELAY     
+         QTERM                          
+   UNTIL DDROP                          
+   R> SETMODE <KEY> ;                   
+                                        
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 093
+( GTYPE                  <11/13/84>233) 
+                                        
+: GTYPE ( addr count -- )               
+   ?DUP IF                              
+      0 DO DUP I + C@ GEMIT LOOP        
+   THEN DROP ;                          
+                                        
+: 1GTYPE ( print normal )               
+   5 SETMODE GTYPE ;                    
+                                        
+: 2GTYPE ( print inverse )              
+   3 SETMODE GTYPE 5 SETMODE ;          
+                                        
+: 3GTYPE ( 1st letter inverse )         
+   3 SETMODE                            
+      OVER C@ XEMIT                     
+   5 SETMODE                            
+      SWAP 1+ SWAP 1- GTYPE ;           
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 094
+( G. GTAB                < 1/15/85>234) 
+                                        
+\ Print number on graphics screen.      
+\ Does not check for stack underflow.   
+                                        
+: G. ( n dp -- )                        
+   >R 0                                 
+   <# R> ?DUP                           
+      IF 0 DO # LOOP 46 HOLD THEN       
+   #S #> GTYPE ;                        
+                                        
+                                        
+\ Tab over "n" char positions.          
+\ "8" has been arbitrarily chosen.      
+                                        
+: GTAB ( n -- )                         
+   8 * GX @ + 0 MAX 279 MIN GX ! ;      
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+-------------------------------------------- SCREEN 095
+( =BLW                   < 1/16/85>235) 
+                                        
+: =BLW ( n -- ; change width of blank ) 
+   1 MAX 7 MIN 32 >CDATA C! ;           
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 100
+( V.2 CHARACTER DRAW     <12/ 7/84>190) 
+                                        
+WIDTH 5 MAX ' WIDTH !                   
+                                        
+: CTASK ;                               
+                                        
+EXIT                                    
+--------------------------------------- 
+V.2 character draw                      
+      character is surrounded           
+      on all sides by 1-bit boundary    
+                                        
+Character Format:                       
+                                        
+ 1 byte  Width in bits                  
+ 1 byte  Height in scan lines           
+ N bytes character data;                
+         each scan line is              
+         left-justified on              
+         a byte boundary                
+                                        
+Usage:   <addr> <xpos> <ypos> CDRAW     
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 101
+( CDRAW                  <11/13/84>191) 
+                                        
+VARIABLE CHADDR ( addr of char data  )  
+VARIABLE CHX    ( x draw pos.        )  
+VARIABLE CHY    ( y draw pos.        )  
+VARIABLE CBITS  ( char width in bits )  
+VARIABLE CBYTES ( width in bytes     )  
+VARIABLE CHGT   ( height in lines    )  
+VARIABLE CPIX   ( pixel offset (draw )  
+                                        
+CREATE CHARBUF 256 ALLOT                
+                                        
+VARIABLE 'CHARBUF   CHARBUF 'CHARBUF !  
+                                        
+ 1 CONSTANT CDELX   ( space between  )  
+ 1 CONSTANT CDELY   ( letters        )  
+                                        
+VARIABLE C.RGT.D7                       
+VARIABLE C.RGT.MSK                      
+EXIT                                    
+--------------------------------------- 
+CDELX and CDELY are used by <GEMIT>     
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 102
+( $CSHIFT                <11/13/84>192) 
+                                        
+CODE $CSHIFT   TXA, PHA, TYA, PHA,      
+               CPIX LDX, INX,           
+ BEGIN,        DEX,                     
+ 0< NOT WHILE, LEFT.D7 LDY,             
+               DEY, CLC, PHP,           
+  BEGIN,       INY,                     
+               CHARBUF ,Y LDA,          
+               PLP, .A ROL, PHA,        
+               # 127 AND, N STA,        
+               GBASE )Y LDA,            
+               # 128 AND, N ORA,        
+               CHARBUF ,Y STA,          
+               PLA, .A ASL, PHP,        
+               C.RGT.D7 CPY,            
+  0= UNTIL,    PLP,                     
+ REPEAT,      C.RGT.MSK LDA, # 128 ORA, 
+               CHARBUF ,Y AND,          
+               CHARBUF ,Y STA,          
+               PLA, TAY, PLA, TAX,      
+               RTS, C;                  
+EXIT                                    
+                               (  RLP ) 
+-------------------------------------------- SCREEN 103
+( $CHLIN                 <11/13/84>193) 
+                                        
+CODE $CHLIN                             
+                  TYA, PHA,             
+                  ' $YADDR JSR,         
+                  GMODE LDA, # 3 CMP,   
+ CS IF,           # 39 LDY,             
+  BEGIN,          GBASE )Y LDA,         
+                  # 128 AND,            
+                  CHARBUF ,Y STA,       
+                  C.RGT.D7 CPY,         
+  0= NOT WHILE,   DEY,                  
+  REPEAT,         LEFT.D7 LDA, CLC,     
+                  CBYTES ADC,           
+                  C.RGT.D7 CMP,         
+  CS IF,          C.RGT.D7 LDY,         
+  ELSE,           TAY,                  
+  THEN,                                 
+                                        
+--> ( more ... )                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 104
+( $CHLIN cont'd          <11/13/84>194) 
+                                        
+  BEGIN,          GFIG )Y LDA,          
+                  CHARBUF ,Y STA,       
+                  LEFT.D7 CPY,          
+  0= NOT WHILE,   DEY,                  
+  REPEAT,                               
+                  ' $CSHIFT JSR,        
+                                        
+                  CBYTES LDA, CLC,      
+                  GFIG ADC,             
+                  GFIG STA,             
+   CS IF,         GFIG 1+ INC,          
+   THEN,                                
+ THEN,                                  
+                  ' $HLINEB JSR,        
+                  PLA, TAY, RTS, C;     
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 105
+( $CLRLIN                <11/13/84>195) 
+                                        
+CODE $CLRLIN                            
+               TYA, PHA,                
+               ' $YADDR JSR,            
+               RIGHT.D7 LDY,            
+ BEGIN,        GBASE )Y LDA,            
+               # 128 AND,               
+               CHARBUF ,Y STA,          
+               LEFT.D7 CPY,             
+ 0= NOT WHILE, DEY,                     
+ REPEAT,                                
+               ' $HLINEB JSR,           
+               PLA, TAY,                
+               RTS, C;                  
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 106
+( $CDRAW                 <11/13/84>196) 
+                                        
+CODE $CDRAW       TXA, PHA, TYA, PHA,   
+                  ' CDELY LDA,          
+  0< NOT IF,                            
+    0= NOT IF,    CHY LDX,              
+                  ' $CLRLIN JSR,        
+                  INX,                  
+  THEN, THEN,                           
+                  CHGT LDY, INY,        
+  BEGIN,          DEY,                  
+  0= NOT WHILE,                         
+                  ' $CHLIN JSR,         
+                  INX,                  
+  REPEAT,                               
+                  ' CDELY LDA,          
+  0< NOT IF,      # 2 CMP,              
+    CS IF,        ' $CLRLIN JSR,        
+  THEN, THEN,     PLA, TAY, PLA, TAX,   
+                  RTS, C;               
+                                        
+EXIT                                    
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 107
+( CD-INIT2               <11/13/84>197) 
+                                        
+VARIABLE &GFIG                          
+VARIABLE &FOO                           
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+-------------------------------------------- SCREEN 108
+(                        <12/12/84>248) 
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 109
+(                        <12/12/84>249) 
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 110
+( CD-INIT                <12/ 9/84>250) 
+VARIABLE &GFIG                          
+VARIABLE &FOO                           
+                                        
+CODE CD-INIT ( addr x y -- addr )       
+               # 0 LDY,                 
+               BOT 1+ LDA,              
+ 0= NOT IF,    TYA,                     
+ ELSE,         BOT LDA, # 192 CMP,      
+  CS IF,       # 192 LDA,               
+ THEN, THEN,   CHY STA, CHY 1+ STY,     
+               INX, INX,                
+               BOT 1+ LDA,              
+ 0< IF,        CHX STY, CHX 1+ STY,     
+ ELSE,         # 1 CMP,                 
+   CS IF,      BOT LDA, # 24 CMP,       
+   THEN,                                
+   CS IF,      # 1 LDA, CHX 1+ STA,     
+               # 23 LDA, CHX STA,       
+   ELSE,       BOT LDA, CHX STA,        
+               BOT 1+ LDA, CHX 1+ STA,  
+ THEN, THEN,                            
+               INX, INX,                
+EXIT --> ( 5 more screens )             
+-------------------------------------------- SCREEN 111
+( CD-INIT continued      <12/12/84>251) 
+\ 1 screen preceding                    
+                                        
+\ CODE <2_CD> ( addr -- )               
+            # 0 LDY,                    
+            CBITS 1+ STY,               
+            CHGT 1+ STY,                
+                                        
+            BOT LDA, N STA,             
+               CLC, # 2 ADC, &GFIG STA, 
+            BOT 1+ LDA, N 1+ STA,       
+               # 0 ADC, &GFIG 1+ STA,   
+                                        
+            N )Y LDA, CBITS STA,        
+            INY,                        
+            N )Y LDA, CHGT STA,         
+                                        
+            INX, INX,                   
+\           NEXT JMP, C;                
+                                        
+EXIT --> ( 4 more screens )             
+                                        
+EXIT                                    
+                                        
+-------------------------------------------- SCREEN 112
+( CD-INIT continued      <12/12/84>252) 
+\ 2 screens preceding                   
+                                        
+\ CODE <3_CD>                           
+         XSAVE STX,                     
+         CHX LDA, CHX 1+ LDY, # 7 LDX,  
+            ' $B/MOD JSR,               
+         &QUO LDA, LEFT.D7 STA,         
+         &REM LDY, CPIX STY,            
+            LMASKS ,Y LDA,              
+            LEFT.MSK STA,               
+         XSAVE LDX,                     
+\        NEXT JMP, C;                   
+                                        
+EXIT --> ( 3 more screens )             
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 113
+( CD-INIT continued      <12/12/84>253) 
+\ 3 screens preceding                   
+                                        
+\ CODE <4_CD>                           
+            XSAVE STX,                  
+            CHX LDA, CLC, CBITS ADC,    
+               &FOO STA,                
+            CHX 1+ LDA, # 0 ADC,        
+               &FOO 1+ STA,             
+            # 1 CMP,                    
+ CS IF,     &FOO LDA, # 24 CMP, THEN,   
+ CS IF,     # 23 LDA, # 1 LDY,          
+ ELSE,      &FOO LDA, &FOO 1+ LDY,      
+ THEN,      # 7 LDX,                    
+            ' $B/MOD JSR,               
+            &QUO LDA, C.RGT.D7 STA,     
+            &REM LDY,                   
+               RMASKS ,Y LDA,           
+               C.RGT.MSK STA,           
+            XSAVE LDX,                  
+\           NEXT JMP, C;                
+                                        
+EXIT --> ( 2 more screens )             
+                                        
+-------------------------------------------- SCREEN 114
+( CD-INIT continued      <12/12/84>254) 
+\ 4 screens preceding                   
+                                        
+\ CODE <5_CD>                           
+            XSAVE STX,                  
+            ' CDELX LDY, DEY,           
+ 0< IF,     # 0 LDY,                    
+ THEN,      TYA, CLC,                   
+            &FOO ADC, &FOO STA,         
+            &FOO 1+ LDA, # 0 ADC,       
+               &FOO 1+ STA,             
+            # 1 CMP,                    
+ CS IF,     &FOO LDA, # 24 CMP, THEN,   
+ CS IF,     # 23 LDA, # 1 LDY,          
+ ELSE,      &FOO LDA, &FOO 1+ LDY,      
+ THEN,      # 7 LDX,                    
+            ' $B/MOD JSR,               
+            &QUO LDA, RIGHT.D7 STA,     
+            &REM LDY,                   
+               RMASKS ,Y LDA,           
+               RIGHT.MSK STA,           
+            XSAVE LDX,                  
+\           NEXT JMP, C;                
+EXIT --> ( 1 more screen )              
+-------------------------------------------- SCREEN 115
+( CD-INIT finally done!  <12/12/84>255) 
+\ 5 screens preceding                   
+                                        
+\ CODE <6_CD>                           
+            XSAVE STX,                  
+            CBITS LDA,                  
+            CLC, # 6 ADC,               
+ CS IF,     # 1 LDY,                    
+ ELSE,      # 0 LDY,                    
+ THEN,      # 7 LDX,                    
+            ' $B/MOD JSR,               
+            &QUO LDA, CBYTES STA,       
+            SEC, &GFIG LDA,             
+               LEFT.D7 SBC, GFIG STA,   
+            &GFIG 1+ LDA, # 0 SBC,      
+               GFIG 1+ STA,             
+            'CHARBUF LDA,               
+               GPATTERN STA,            
+            'CHARBUF 1+ LDA,            
+               GPATTERN 1+ STA,         
+            XSAVE LDX,                  
+            NEXT JMP, C;                
+EXIT                                    
+                                        
+-------------------------------------------- SCREEN 116
+( CDRAW                  <12/12/84>256) 
+                                        
+: CDRAW ( addr x y -- )                 
+         CD-INIT                        
+         ' $CDRAW CALL ;                
+                                        
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 117
+( CD-INIT2               <12/12/84>257) 
+                                        
+: CD2 ( -- )                            
+            CBITS @ 6 + 7/ CBYTES !     
+            &GFIG @ LEFT.D7 @ - GFIG !  
+            CHARBUF GPATTERN ! ;        
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 118
+( CD-INIT                <12/12/84>258) 
+                                        
+: CD1 ( ADDR X Y -- )                   
+  ( Y )     0 MAX 191 MIN CHY !         
+  ( X )     0 MAX 279 MIN CHX !         
+  ( ADDR )  DUP    C@ CBITS !           
+  ( ADDR )  DUP 1+ C@ CHGT !            
+  ( ADDR )  2+ &GFIG !                  
+                                        
+            CHX @ 7/MOD  LEFT.D7 !      
+               DUP CPIX !               
+               LMASKS + C@ LEFT.MSK !   
+                                        
+            CHX @ CBITS @ + 279 MIN     
+            DUP 7/MOD                   
+               C.RGT.D7 !               
+               RMASKS + C@ C.RGT.MSK !  
+            CDELX + 1- 279 MIN 7/MOD    
+               RIGHT.D7 !               
+               RMASKS + C@ RIGHT.MSK !  
+            CD2 ;                       
+                                        
+: CDR CD1 ' $CDRAW CALL ;               
+EXIT                           (  RLP ) 
+-------------------------------------------- SCREEN 119
+( LOAD BLOCK             <12/12/84>259) 
+                                        
+240 243 THRU                            
+245 256 THRU                            
+222 228 THRU                            
+                                        
+: GTYPE ( addr count -- )               
+   ?DUP IF                              
+      0 DO DUP I + C@ GEMIT LOOP        
+   THEN DROP ;                          
+                                        
+: S1 ." Damn it!" ;                     
+                                        
+: S2 ." Another long phrase " ;         
+                                        
+: .1 ' S1 2+ COUNT GTYPE GCR ;          
+: .2 ' S2 2+ COUNT GTYPE GCR ;          
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+-------------------------------------------- SCREEN 120
+( SCRL-PARM              <12/ 9/84>260) 
+                                        
+\ scroll points to 4-byte block         
+\ top bottom left(byt) width(byt)       
+                                        
+CREATE WIN 00 C, 141 C,  2 C, 30 C,     
+                                        
+10 CONSTANT YDELTA                      
+                                        
+CODE HLINEB ( y -- )                    
+      TXA, PHA, BOT LDA, TAX,           
+      ' $YADDR JSR,                     
+      ' $HLINEB JSR,                    
+      PLA, TAX, POP JMP, C;             
+                                        
+: SCRL-PARM ( addr -- top bot )         
+   DUP     C@ SWAP      ( t adr )       
+   DUP 1+  C@ SWAP      ( t b adr )     
+   DUP 2+  C@ SWAP      ( t b l adr )   
+   DUP 3 + C@ SWAP DROP ( t b l w )     
+   OVER + RIGHT.D7 C! LEFT.D7 C!        
+   127 LEFT.MSK C! 127 RIGHT.MSK C! ;   
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 121
+( SCUP                   <12/12/84>261) 
+                                        
+: SCUP ( win -- )                       
+   SCRL-PARM ( top bottom )             
+   GMODE C@ >R                          
+   5 SETMODE                            
+      DUP 1+ ROT YDELTA +               
+      DO    I YADDR GPATTERN !          
+            I YDELTA - HLINEB           
+      LOOP                              
+   2 SETMODE ( black )                  
+      DUP 1+ YDELTA - SWAP VLINE        
+   R> SETMODE ;                         
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 122
+( SCDN                   <12/12/84>262) 
+                                        
+: SCDN ( win -- )                       
+   SCRL-PARM ( top bottom )             
+   GMODE C@ >R                          
+   5 SETMODE                            
+      YDELTA - OVER 1- SWAP             
+      DO    I YADDR GPATTERN !          
+            I YDELTA + HLINEB           
+      -1 +LOOP                          
+   2 SETMODE ( black )                  
+      DUP YDELTA + VLINE                
+   R> SETMODE ;                         
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 125
+( USCROLL                <11/16/84>235) 
+                                        
+: USCROLL ( -- )                        
+   LMARG @ RMARG @ SETENDPTS            
+   GETMODE >R                           
+   5 SETMODE                            
+      CMAXY CDELX +                     
+      BMARG @ OVER -                    
+      DUP TMARG @                       
+      DO    OVER I + YADDR GPATTERN !   
+            I HLINEB                    
+      LOOP                              
+   2 SETMODE ( black )                  
+      BMARG @ VLINE                     
+      DROP                              
+   R> SETMODE ;                         
+                                        
+EXIT                                    
+                                        
+                                        
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 126
+( DSCROLL                <11/16/84>236) 
+                                        
+: DSCROLL ( -- )                        
+   LMARG @ RMARG @ SETENDPTS            
+   GETMODE >R                           
+   5 SETMODE                            
+      CMAXY CDELX +                     
+      TMARG @ OVER +                    
+      DUP BMARG @                       
+      DO    OVER I SWAP - YADDR         
+            GPATTERN !                  
+            I HLINEB                    
+      -1 +LOOP                          
+   2 SETMODE ( black )                  
+      TMARG @ VLINE                     
+      DROP                              
+   R> SETMODE ;                         
+                                        
+EXIT                                    
+--------------------------------------- 
+                                        
+                                        
+                                        
+                               (  RLP ) 
+-------------------------------------------- SCREEN 129
+( BUBBLE                 < 1/16/85>270) 
+                                        
+: BUBBLE ( width height x y -- )        
+   >R >R >R               ( w | h x y ) 
+   I' 6 + OVER I' + 6 - SETENDPTS       
+      J HLINE                           
+      J I + HLINE                       
+   I' 3 + OVER I' + 3 - SETENDPTS       
+      J 1+ HLINE                        
+      J I + 1- HLINE                    
+   I' 1+  OVER I' + 1-  SETENDPTS       
+      J 2+ HLINE                        
+      J 3 + HLINE                       
+      J I + 2- HLINE                    
+      J I + 3 - HLINE                   
+   I'     OVER I' +     SETENDPTS       
+      J I + 3 -                         
+      J 4 +                             
+      DO I HLINE LOOP                   
+   R> R> R> DDROP DDROP ;               
+                                        
+                                        
+                                        
+                                        
+-------------------------------------------- SCREEN 130
+( BUBBLE                 < 1/16/85>270) 
+                                        
+: BUBBLE ( width height x y -- )        
+   ROT OVER +             ( w x y y+h ) 
+   >R >R           ( w x | i=y i'=y+h ) 
+   SWAP OVER +   ( x x+w | i=y i'=y+h ) 
+   1 SETMODE                            
+   OVER 2+ OVER 2-                      
+    SETENDPTS I 3 - HLINE  I' 3 + HLINE 
+   OVER OVER                            
+    SETENDPTS I 2- HLINE   I' 2+ HLINE  
+   OVER 1- OVER 1+                      
+    SETENDPTS I 1- HLINE   I' 1+ HLINE  
+   OVER 2- OVER 2+                      
+    SETENDPTS I HLINE      I' HLINE     
+              I 1+ HLINE   I' 1- HLINE  
+   OVER 3 - OVER 3 +                    
+    SETENDPTS                           
+    I 2+ I' 2- VLINE                    
+   R> R> DDROP DDROP                    
+   5 SETMODE ;                          
+                                        
+                                        
+                                        
+-------------------------------------------- SCREEN 131
+( BUBBLE                 < 1/16/85>270) 
+                                        
+0 CONSTANT X   0 CONSTANT Y             
+0 CONSTANT X+W 0 CONSTANT Y+H           
+                                        
+: BUBBLE ( width height x y -- )        
+   TO Y TO X                            
+   Y + TO Y+H  X + TO X+W               
+   1 SETMODE                            
+   X 2+ X+W 2- SETENDPTS                
+      Y 3 - HLINE    Y+H 3 + HLINE      
+   X X+W SETENDPTS                      
+      Y 2- HLINE     Y+H 2+ HLINE       
+   X 1- X+W 1+ SETENDPTS                
+      Y 1- HLINE     Y+H 1+ HLINE       
+   X 2- X+W 2+ SETENDPTS                
+      Y HLINE        Y+H HLINE          
+      Y 1+ HLINE     Y+H 1- HLINE       
+   X 3 - X+W 3 + SETENDPTS              
+      Y 2+ Y+H 2- VLINE                 
+   5 SETMODE ;                          
+                                        
+                                        
+                                        
+-------------------------------------------- SCREEN 132
+( FOO                    < 1/29/85>272) 
+                                        
+: FOO CLS RANPT                         
+      BEGIN                             
+         16 RANDOM HCOLOR               
+         RANPT DSWAP DOVER LINE         
+         ?TERMINAL                      
+      UNTIL DDROP ;                     
+                                        
+: FOO1                                  
+      CLS                               
+      BEGIN                             
+         16 RANDOM HCOLOR               
+         140 96 RANPT LINE              
+         ?TERMINAL                      
+      UNTIL ;                           
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+-------------------------------------------- SCREEN 133
+( FOO2                   < 2/ 4/85>273) 
+                                        
+1000 1200 DCONSTANT XSCALE              
+                                        
+: ?NEG 2 RANDOM IF NEGATE THEN ;        
+                                        
+: FOO2                                  
+   BEGIN                                
+      16 RANDOM HCOLOR                  
+      30 RANDOM 10 + 0 DO               
+         140 RANDOM ?NEG                
+         96 RANDOM ?NEG  >R >R          
+         I  XSCALE */ 140 +             
+         I' XSCALE */ 96 +              
+         140 R> + 96 R> +               
+         LINE                           
+         QTERM IF LEAVE THEN            
+      LOOP                              
+      ?TERMINAL                         
+   UNTIL ;                              
+                                        
+                                        
+                                        
+                                        
