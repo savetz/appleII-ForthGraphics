@@ -21,3 +21,4 @@ Not sure if the code was ever documented beyond what’s in the source blocks, b
 ## Apple Picture Cycle Program 84-10-11
 ## Graphics Packer
 ## Picture Pack-Unpack Source mod Fred Haer. Backup. 84-11-07. Apple MVP
+## Graphics ver 5.2
